@@ -10,7 +10,7 @@ import viteCompression from "vite-plugin-compression";
 
 export default ({ mode }) =>
   defineConfig({
-    base: '/homepage/' ,
+    base: '/homepage' ,
     plugins: [
       vue(),
       AutoImport({
