@@ -8,7 +8,6 @@ import AutoImport from "unplugin-auto-import/vite";
 import Components from "unplugin-vue-components/vite";
 import viteCompression from "vite-plugin-compression";
 
-// https://vitejs.dev/config/
 export default ({ mode }) =>
   defineConfig({
     base: '/homepage',
