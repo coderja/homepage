@@ -1,53 +1,51 @@
-# 一个简单的 GitHub Pages 部署工作流
-name: Deploy static content to Pages
+# Dev 分支推送部署预览
+## 仅部署 Win 端
+name: Build Dev
 
 on:
-  # 仅在推送到默认分支时运行
   push:
-    branches: ['main']
-
-  # 这个选项可以使你手动在 Action tab 页面触发工作流
-  workflow_dispatch:
-
-# 设置 GITHUB_TOKEN 的权限，以允许部署到 GitHub Pages
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-# 允许一个并发部署
-concurrency:
-  group: 'pages'
-  cancel-in-progress: true
+    branches:
+      - dev
+      - main
 
 jobs:
-  # 单次部署的工作描述
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
+  release:
+    name: Build Website
+    runs-on: windows-latest
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Set up Node
-        uses: actions/setup-node@v4
+      # 检出 Git 仓库
+      - name: Check out git repository
+        uses: actions/checkout@v4.1.1
+      # 安装 Node.js
+      - name: Install Node.js
+        uses: actions/setup-node@v4.0.0
         with:
-          node-version: lts/*
-          cache: 'npm'
-      - name: Install dependencies
-        run: npm ci
-      - name: Build
+          node-version: "18.x"
+      # 复制环境变量文件
+      - name: Copy .env.example
+        run: |
+          if (-not (Test-Path .env)) {
+            Copy-Item .env.example .env
+          } else {
+            Write-Host ".env file already exists. Skipping the copy step."
+          }
+      # 安装项目依赖
+      - name: Install Dependencies
+        run: npm install
+      # 构建程序
+      - name: Build Website
         run: npm run build
-      # - name: List output files 
-        # run: ls -alh ./dist
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # 上传构建产物
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
         with:
-          # 上传 dist 文件夹
-          path: './dist'
+          name: Home
+          path: dist
       - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
